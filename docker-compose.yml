@@ -1,0 +1,37 @@
+# docker-compose.yml
+version: '3.8'
+
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - '3000:3000'
+    depends_on:
+      - 'db'
+    environment:
+      DB_HOST: 'db'
+      NODE_ENV: development
+      TYPEORM_CONFIG: './src/ormconfig.ts'
+    platform: linux/arm64
+    healthcheck:
+      test: ['CMD-SHELL', 'curl -f http://localhost:3000/ || exit 1']
+      interval: 10s
+      timeout: 5s
+      retries: 3
+    command: sh -c "npm run start:dev && sleep 10"
+  db:
+    image: postgres:latest
+    environment:
+      POSTGRES_DB: postgres
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - '5432:5432'
+    platform: linux/arm64
+    healthcheck:
+      test: ['CMD', 'pg_isready', '-q', '-d', 'postgres', '-U', 'postgres']
+      interval: 10s
+      timeout: 5s
+      retries: 3
